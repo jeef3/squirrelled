@@ -20,7 +20,7 @@ var app = express();
 app.use(bodyParser.json());
 
 app.post('/issue-comment', function (req, res) {
-  var suppliedSignature = req.headers['X-Hub-Signature']
+  var suppliedSignature = req.get('X-Hub-Signature');
 
   var expectedSignature = 'sha1=' + crypto
     .createHmac('sha1', nconf.get('GITHUB_SECRET'))
