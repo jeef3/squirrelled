@@ -18,7 +18,7 @@ var app = express();
 app.use(bodyParser.json());
 
 app.post('/issue-comment', function (req, res) {
-  res.send(200);
+  res.sendStatus(200);
 
   console.log('Issue comment event received');
 
@@ -27,8 +27,9 @@ app.post('/issue-comment', function (req, res) {
   var repo = event.repository;
   var issue = event.issue;
   var comment = event.comment;
+
   console.log('Comment body:', comment.body);
- 
+
   var shipIt = !!comment.body.match(/:shipit:/ig);
 
   if (!shipIt) {
@@ -47,7 +48,8 @@ app.post('/issue-comment', function (req, res) {
     labels.push('squirrelled');
   }
 
-  issue.update({
+  console.log('Updating issue labels');
+  ghissue.update({
     labels: labels
   }, function () {});
 });
