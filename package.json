@@ -1,5 +1,5 @@
 {
-  "name": "github-squirrelled",
+  "name": "squirrelled",
   "version": "1.0.0",
   "description": "Require a squirrel before a pull request can be merged",
   "repository": "https://github.com/jeef3/squirrelled",
