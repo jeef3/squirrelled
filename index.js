@@ -1,4 +1,5 @@
 var express = require('express');
+var bodyParser = require('body-parser');
 var octonode = require('octonode');
 var dotenv = require('dotenv');
 var nconf = require('nconf');
@@ -11,10 +12,44 @@ nconf
     PORT: 3000
   });
 
+var github = octonode.client(nconf.get('GITHUB_TOKEN'));
+
 var app = express();
+app.use(bodyParser.json());
 
 app.post('/issue-comment', function (req, res) {
   res.send(200);
+
+  console.log('Issue comment event received');
+
+  var event = req.body;
+
+  var repo = event.repository;
+  var issue = event.issue;
+  var comment = event.comment;
+  console.log('Comment body:', comment.body);
+ 
+  var shipIt = !!comment.body.match(/:shipit:/ig);
+
+  if (!shipIt) {
+    console.log('No ship');
+    return;
+  }
+
+  console.log('Ship it!');
+
+  var ghissue = github.issue(repo.full_name, issue.number);
+  var labels = issue.labels.map(function (label) {
+    return label.name;
+  });
+
+  if (labels.indexOf('squirrelled') === -1) {
+    labels.push('squirrelled');
+  }
+
+  issue.update({
+    labels: labels
+  }, function () {});
 });
 
 app.get('/', function (req, res) {
@@ -27,31 +62,3 @@ var server = app.listen(nconf.get('PORT'), function () {
 
   console.log('Squirrelled listening at http://%s:%s', host, port);
 });
-
-var github = octonode.client(nconf.get('GITHUB_TOKEN'));
-
-// var issue = github.issue('', 0);
-
-// issue.comments(function (err, comments) {
-//   var result = comments.filter(function (comment) {
-//     return comment.body.match(/:shipit:/ig);
-//   });
-
-//   var canShipIt = !!result.length;
-
-//   if (!canShipIt) { return; }
-
-//   issue.info(function (err, info) {
-//     var labels = info.labels.map(function (label) {
-//       return label.name;
-//     });
-
-//     if (labels.indexOf('squirrelled') === -1) {
-//       labels.push('squirrelled');
-//     }
-
-//     issue.update({
-//       labels: labels
-//     }, function () {});
-//   })
-// });
