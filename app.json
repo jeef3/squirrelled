@@ -1,0 +1,5 @@
+{
+  "name": "Squirrelled",
+  "description": "Mark GitHub Pull Requests as 'squirrelled' when they receive a :shipit:",
+  "repository": "https://github.com/jeef3/squirrelled"
+}

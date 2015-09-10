@@ -2,6 +2,7 @@
   "name": "github-squirrelled",
   "version": "1.0.0",
   "description": "Require a squirrel before a pull request can be merged",
+  "repository": "https://github.com/jeef3/squirrelled",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
