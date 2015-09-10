@@ -1,0 +1,22 @@
+{
+  "name": "github-squirrelled",
+  "version": "1.0.0",
+  "description": "Require a squirrel before a pull request can be merged",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "github",
+    "squirrel"
+  ],
+  "author": "Jeff Knaggs",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^1.2.0",
+    "express": "^4.13.3",
+    "nconf": "^0.7.2",
+    "octonode": "^0.7.1",
+    "request": "^2.61.0"
+  }
+}
