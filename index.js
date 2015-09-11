@@ -22,10 +22,12 @@ app.use(bodyParser.text());
 app.post('/issue-comment', function (req, res) {
   var suppliedSignature = req.get('X-Hub-Signature');
 
+  console.log(req.body);
+
   var expectedSignature = 'sha1=' + crypto
-  .createHmac('sha1', nconf.get('GITHUB_SECRET'))
-  .update(req.body)
-  .digest('hex');
+    .createHmac('sha1', nconf.get('GITHUB_SECRET'))
+    .update(req.body)
+    .digest('hex');
 
   console.log('Issue comment event received');
   console.log('Comparing keys:');
