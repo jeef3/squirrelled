@@ -17,7 +17,7 @@ nconf
 var github = octonode.client(nconf.get('GITHUB_TOKEN'));
 
 var app = express();
-app.use(bodyParser.text());
+app.use(bodyParser.text({ type: 'application/json' }));
 
 app.post('/issue-comment', function (req, res) {
   var suppliedSignature = req.get('X-Hub-Signature');
