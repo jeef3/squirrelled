@@ -5,7 +5,6 @@ var bodyParser = require('body-parser');
 var octonode = require('octonode');
 var dotenv = require('dotenv');
 var nconf = require('nconf');
-var concat = require('concat-stream');
 
 dotenv.load();
 nconf
@@ -18,67 +17,58 @@ nconf
 var github = octonode.client(nconf.get('GITHUB_TOKEN'));
 
 var app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.text());
 
 app.post('/issue-comment', function (req, res) {
-  var raw = '';
+  var suppliedSignature = req.get('X-Hub-Signature');
 
-  req.setEncoding('utf8');
-  req.on('data', function (chunk) {
-    raw += chunk;
+  var expectedSignature = 'sha1=' + crypto
+  .createHmac('sha1', nconf.get('GITHUB_SECRET'))
+  .update(req.body)
+  .digest('hex');
+
+  console.log('Issue comment event received');
+  console.log('Comparing keys:');
+  console.log(suppliedSignature);
+  console.log(expectedSignature);
+
+  if (suppliedSignature !== expectedSignature) {
+    res.sendStatus(404);
+    return;
+  }
+
+  res.sendStatus(200);
+
+  var event = JSON.parse(req.body);
+
+  var repo = event.repository;
+  var issue = event.issue;
+  var comment = event.comment;
+
+  console.log('Comment body:', comment.body);
+
+  var shipIt = !!comment.body.match(/:shipit:/ig);
+
+  if (!shipIt) {
+    console.log('No ship');
+    return;
+  }
+
+  console.log('Ship it!');
+
+  var ghissue = github.issue(repo.full_name, issue.number);
+  var labels = issue.labels.map(function (label) {
+    return label.name;
   });
 
-  req.on('end', function () {
-    var suppliedSignature = req.get('X-Hub-Signature');
+  if (labels.indexOf('squirrelled') === -1) {
+    labels.push('squirrelled');
+  }
 
-    var expectedSignature = 'sha1=' + crypto
-      .createHmac('sha1', nconf.get('GITHUB_SECRET'))
-      .update(JSON.stringify(raw))
-      .digest('hex');
-
-    console.log('Issue comment event received');
-    console.log('Comparing keys:');
-    console.log(suppliedSignature);
-    console.log(expectedSignature);
-
-    if (suppliedSignature !== expectedSignature) {
-      res.sendStatus(404);
-      return;
-    }
-
-    res.sendStatus(200);
-
-    var event = req.body;
-
-    var repo = event.repository;
-    var issue = event.issue;
-    var comment = event.comment;
-
-    console.log('Comment body:', comment.body);
-
-    var shipIt = !!comment.body.match(/:shipit:/ig);
-
-    if (!shipIt) {
-      console.log('No ship');
-      return;
-    }
-
-    console.log('Ship it!');
-
-    var ghissue = github.issue(repo.full_name, issue.number);
-    var labels = issue.labels.map(function (label) {
-      return label.name;
-    });
-
-    if (labels.indexOf('squirrelled') === -1) {
-      labels.push('squirrelled');
-    }
-
-    console.log('Updating issue labels');
-    ghissue.update({
-      labels: labels
-    }, function () {});
-  });
+  console.log('Updating issue labels');
+  ghissue.update({
+    labels: labels
+  }, function () {});
 });
 
 app.get('/', function (req, res) {
