@@ -21,9 +21,14 @@ var app = express();
 app.use(bodyParser.json());
 
 app.post('/issue-comment', function (req, res) {
-  req.pipe(concat(function (data) {
-    var raw = data;
+  var raw = '';
 
+  req.setEncoding('utf8');
+  req.on('data', function (chunk) {
+    raw += chunk;
+  });
+
+  req.on('end', function () {
     var suppliedSignature = req.get('X-Hub-Signature');
 
     var expectedSignature = 'sha1=' + crypto
@@ -73,7 +78,7 @@ app.post('/issue-comment', function (req, res) {
     ghissue.update({
       labels: labels
     }, function () {});
-  }));
+  });
 });
 
 app.get('/', function (req, res) {
