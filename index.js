@@ -2,9 +2,10 @@ var crypto = require('crypto');
 
 var express = require('express');
 var bodyParser = require('body-parser');
-var octonode = require('octonode');
 var dotenv = require('dotenv');
 var nconf = require('nconf');
+
+var middleware = [require('./shipit')];
 
 dotenv.load();
 nconf
@@ -14,7 +15,6 @@ nconf
     PORT: 3000
   });
 
-var github = octonode.client(nconf.get('GITHUB_TOKEN'));
 
 var app = express();
 app.use(bodyParser.text({ type: 'application/json' }));
@@ -41,34 +41,9 @@ app.post('/issue-comment', function (req, res) {
 
   var event = JSON.parse(req.body);
 
-  var repo = event.repository;
-  var issue = event.issue;
-  var comment = event.comment;
-
-  console.log('Comment body:', comment.body);
-
-  var shipIt = !!comment.body.match(/:shipit:/ig);
-
-  if (!shipIt) {
-    console.log('No ship');
-    return;
-  }
-
-  console.log('Ship it!');
-
-  var ghissue = github.issue(repo.full_name, issue.number);
-  var labels = issue.labels.map(function (label) {
-    return label.name;
-  });
-
-  if (labels.indexOf('squirrelled') === -1) {
-    labels.push('squirrelled');
-  }
-
-  console.log('Updating issue labels');
-  ghissue.update({
-    labels: labels
-  }, function () {});
+  middleware
+    .filter(function (m) { return m.match(event) })
+    .forEach(function (m) { return m.exec(event) });
 });
 
 app.get('/', function (req, res) {
